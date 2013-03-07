@@ -1,3 +1,6 @@
+% Path setup
+% Note: Must be configured for your machine
+
 addpath(genpath('/data/4/jmc/tools/spm8'));
 addpath(genpath('/data/4/jmc/tools/batch8'));
 

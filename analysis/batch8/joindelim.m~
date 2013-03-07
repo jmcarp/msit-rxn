@@ -1,0 +1,10 @@
+function s = joindelim(list, delim)
+
+s = char(list(1));
+
+for listidx = 2 : length(list)
+    s = sprintf('%s%s%s', s, delim, char(list(listidx)));
+end
+
+function out = tostr(in)
+

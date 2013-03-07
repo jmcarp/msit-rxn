@@ -1,0 +1,69 @@
+function despike_b
+
+global CCN;
+
+% Load data
+data = expandpath(CCN.ffiles);
+
+% Get options
+if isfield(CCN.despike, 'opts')
+    opts = CCN.despike.opts;
+else
+    opts = '';
+end
+
+% Open log
+logname = sprintf('%s/%s_despike.txt', CCN.logdir, CCN.subject);
+logfile = fopen(logname, 'w');
+
+for runidx = 1 : length(data)
+    
+    % Get path
+    runname = data{runidx};
+    [path name] = fileparts(runname);
+    
+    % Update log
+    fprintf(logfile, 'Working on run %d...\n', runidx);
+    
+    % Remove existing despiked data
+    dsbrik = sprintf('%s/despike+orig.BRIK', path);
+    dshead = sprintf('%s/despike+orig.HEAD', path);
+    dsnii = fileprep(runname, 'd');
+    if exist(dsbrik, 'file')
+        delete(dsbrik);
+    end
+    if exist(dshead, 'file')
+        delete(dshead);
+    end
+    if exist(dsnii, 'file')
+        delete(dsnii);
+    end
+    
+    % Run 3dDespike
+    cmd = sprintf('3dDespike -prefix %s/despike %s %s', path, opts, runname);
+    [status result] = system(cmd);
+    fprintf(logfile, '%s', result);
+    
+    % Convert to NIFTI
+    cmd = sprintf('3dAFNItoNIFTI -prefix %s/d%s %s/despike+orig', path, name, path);
+    system(cmd);
+    
+    if isfield(CCN.despike, 'gethdr') && CCN.despike.gethdr
+        
+        img = spm_vol(runname);
+        dimg = spm_vol(dsnii);
+        
+        newhdr = img;
+        for volidx = 1 : length(newhdr)
+            newhdr(volidx).fname = dimg(volidx).fname;
+            spm_write_vol(newhdr(volidx), spm_read_vols(
+        end
+        
+        spm_write_vol(newhdr, spm_read_vols(dimg));
+        
+    end
+    
+end
+
+% Close log
+fclose(logfile);
